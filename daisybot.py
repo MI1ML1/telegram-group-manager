@@ -10,13 +10,13 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # توكن البوت (احصل عليه من BotFather)
-TOKEN = 'bot_token'
+TOKEN = '8639261712:AAFQyhEnaLelHbcznwJaXkGtWoBzjpw5m48'
 
 user_data = {}
 
 # تفاصيل مالك البوت
-OWNER_ID = YOUR_USERID
-OWNER_USERNAME = "@realcodedbyom"
+OWNER_ID = 8559162694
+OWNER_USERNAME = "@fo98z"
 
 def is_owner(user_id: int) -> bool:
     """التحقق مما إذا كان المستخدم هو مالك البوت."""
