@@ -10,13 +10,13 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # توكن البوت (احصل عليه من BotFather)
-TOKEN = 'bot_token'
+TOKEN = '8639261712:AAFQyhEnaLelHbcznwJaXkGtWoBzjpw5m48'
 
 user_data = {}
 
 # بيانات المطور
-OWNER_ID = YOUR_USERID  # استبدل هذا بـ ID حسابك
-OWNER_USERNAME = "@jf_40"
+OWNER_ID = 8559162694  # استبدل هذا بـ ID حسابك
+OWNER_USERNAME = "@fo98z"
 
 def is_owner(user_id: int) -> bool:
     """التحقق مما إذا كان المستخدم هو مطور البوت."""
