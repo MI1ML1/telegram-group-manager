@@ -5,25 +5,25 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageH
 import telegram
 from datetime import datetime, timedelta
 
-# Enable logging
+# تفعيل السجلات
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# BOT TOKEN (genrate from bot father)
+# توكن البوت (احصل عليه من BotFather)
 TOKEN = 'bot_token'
 
 user_data = {}
 
-# Bot owner details
+# تفاصيل مالك البوت
 OWNER_ID = YOUR_USERID
 OWNER_USERNAME = "@realcodedbyom"
 
 def is_owner(user_id: int) -> bool:
-    """Check if the user is the bot owner."""
+    """التحقق مما إذا كان المستخدم هو مالك البوت."""
     return user_id == OWNER_ID
 
 def is_admin(update: Update, context: CallbackContext) -> bool:
-    """Check if the user is an admin, the bot owner, or if the bot itself is an admin."""
+    """التحقق مما إذا كان المستخدم مشرفاً أو المالك."""
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
     
@@ -34,173 +34,173 @@ def is_admin(update: Update, context: CallbackContext) -> bool:
         chat_member = context.bot.get_chat_member(chat_id, user_id)
         return chat_member.status in ['creator', 'administrator']
     except Exception as e:
-        logger.error(f"Error checking admin status: {e}")
+        logger.error(f"خطأ في التحقق من صلاحيات المشرف: {e}")
         return False
 
 def bot_has_admin_rights(context: CallbackContext, chat_id: int) -> bool:
-    """Check if the bot has admin rights in the chat."""
+    """التحقق مما إذا كان البوت يمتلك صلاحيات مشرف."""
     try:
         bot_member = context.bot.get_chat_member(chat_id, context.bot.id)
         return bot_member.status in ['creator', 'administrator']
     except Exception as e:
-        logger.error(f"Error checking bot admin status: {e}")
+        logger.error(f"خطأ في التحقق من صلاحيات البوت: {e}")
         return False
 
 def start(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /start is issued."""
+    """إرسال رسالة عند إصدار الأمر /start."""
     user = update.effective_user
     welcome_message = (
-        f"🌼 Welcome to DaisyBot, {user.mention_markdown_v2()}\! 🌼\n\n"
-        f"I'm here to help manage your chat and make it bloom with fun and order\. 🌺\n\n"
-        f"🔧 Managed by: {OWNER_USERNAME}\n"
-        f"🚀 Version: 1\.0\n"
-        f"💡 Use /help to see available commands\n\n"
-        f"Let's make this chat a beautiful garden together\! 🌻"
+        f"🌼 أهلاً بك في بوت ديزي، {user.mention_markdown_v2()}\! 🌼\n\n"
+        f"أنا هنا لمساعدتك في إدارة الدردشة وجعلها أكثر تنظيماً ومتعة\. 🌺\n\n"
+        f"🔧 بواسطة: {OWNER_USERNAME}\n"
+        f"🚀 الإصدار: 1\.0\n"
+        f"💡 استخدم help لرؤية الأوامر المتاحة\n\n"
+        f"لننتقل بالدردشة إلى مستوى آخر معاً\! 🌻"
     )
     update.message.reply_markdown_v2(welcome_message)
     main_menu(update, context)
 
 def main_menu(update: Update, context: CallbackContext) -> None:
-    """Show the main menu."""
+    """عرض القائمة الرئيسية."""
     keyboard = [
-        [InlineKeyboardButton("👮 Admin Commands", callback_data='admin_commands')],
-        [InlineKeyboardButton("👥 User Commands", callback_data='user_commands')],
-        [InlineKeyboardButton("🎉 Fun Commands", callback_data='fun_commands')],
-        [InlineKeyboardButton("⚙️ Settings", callback_data='settings')]
+        [InlineKeyboardButton("👮 أوامر المشرفين", callback_data='admin_commands')],
+        [InlineKeyboardButton("👥 أوامر المستخدمين", callback_data='user_commands')],
+        [InlineKeyboardButton("🎉 أوامر التسلية", callback_data='fun_commands')],
+        [InlineKeyboardButton("⚙️ الإعدادات", callback_data='settings')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     if update.message:
-        update.message.reply_text('Please choose a category:', reply_markup=reply_markup)
+        update.message.reply_text('يرجى اختيار قسم:', reply_markup=reply_markup)
     else:
         query = update.callback_query
         query.answer()
-        query.edit_message_text('Please choose a category:', reply_markup=reply_markup)
+        query.edit_message_text('يرجى اختيار قسم:', reply_markup=reply_markup)
 
 def admin_commands(update: Update, context: CallbackContext) -> None:
-    """Show admin commands."""
+    """عرض أوامر المشرفين."""
     keyboard = [
-        [InlineKeyboardButton("🚫 Ban", callback_data='ban'),
-         InlineKeyboardButton("✅ Unban", callback_data='unban')],
-        [InlineKeyboardButton("👢 Kick", callback_data='kick'),
-         InlineKeyboardButton("🔇 Mute", callback_data='mute')],
-        [InlineKeyboardButton("🔊 Unmute", callback_data='unmute'),
-         InlineKeyboardButton("⚠️ Warn", callback_data='warn')],
-        [InlineKeyboardButton("🔄 Unwarn", callback_data='unwarn'),
-         InlineKeyboardButton("🎖️ Promote", callback_data='promote')],
-        [InlineKeyboardButton("⬇️ Demote", callback_data='demote'),
-         InlineKeyboardButton("🧹 Purge", callback_data='purge')],
-        [InlineKeyboardButton("🔍 Filter", callback_data='filter'),
-         InlineKeyboardButton("🛑 Stop Filter", callback_data='stop')],
-        [InlineKeyboardButton("📋 Filter List", callback_data='filterlist'),
-         InlineKeyboardButton("🌐🚫 Global Ban", callback_data='gban')],
-        [InlineKeyboardButton("🔒 Lock All", callback_data='lockall'),
-         InlineKeyboardButton("🔓 Unlock All", callback_data='unlockall')],
-        [InlineKeyboardButton("🗑️⚠️ Delete & Warn", callback_data='dwarn'),
-         InlineKeyboardButton("🗑️🔇 Delete & Mute", callback_data='dmute')],
-        [InlineKeyboardButton("🔙 Back to Main Menu", callback_data='main_menu')]
+        [InlineKeyboardButton("🚫 حظر", callback_data='ban'),
+         InlineKeyboardButton("✅ إلغاء حظر", callback_data='unban')],
+        [InlineKeyboardButton("👢 طرد", callback_data='kick'),
+         InlineKeyboardButton("🔇 كتم", callback_data='mute')],
+        [InlineKeyboardButton("🔊 إلغاء كتم", callback_data='unmute'),
+         InlineKeyboardButton("⚠️ تحذير", callback_data='warn')],
+        [InlineKeyboardButton("🔄 إزالة تحذير", callback_data='unwarn'),
+         InlineKeyboardButton("🎖️ رفع مشرف", callback_data='promote')],
+        [InlineKeyboardButton("⬇️ تنزيل مشرف", callback_data='demote'),
+         InlineKeyboardButton("🧹 تنظيف", callback_data='purge')],
+        [InlineKeyboardButton("🔍 تصفية (فلتر)", callback_data='filter'),
+         InlineKeyboardButton("🛑 إيقاف فلتر", callback_data='stop')],
+        [InlineKeyboardButton("📋 قائمة الفلاتر", callback_data='filterlist'),
+         InlineKeyboardButton("🌐🚫 حظر عام", callback_data='gban')],
+        [InlineKeyboardButton("🔒 قفل الكل", callback_data='lockall'),
+         InlineKeyboardButton("🔓 فتح الكل", callback_data='unlockall')],
+        [InlineKeyboardButton("🗑️⚠️ حذف وتحذير", callback_data='dwarn'),
+         InlineKeyboardButton("🗑️🔇 حذف وكتم", callback_data='dmute')],
+        [InlineKeyboardButton("🔙 العودة للقائمة", callback_data='main_menu')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     query = update.callback_query
     query.answer()
-    query.edit_message_text('Admin Commands:', reply_markup=reply_markup)
+    query.edit_message_text('أوامر المشرفين:', reply_markup=reply_markup)
 
 def user_commands(update: Update, context: CallbackContext) -> None:
-    """Show user commands."""
+    """عرض أوامر المستخدمين."""
     keyboard = [
-        [InlineKeyboardButton("ℹ️ Info", callback_data='info'),
-         InlineKeyboardButton("🆔 IDs", callback_data='id')],
-        [InlineKeyboardButton("📜 Rules", callback_data='rules'),
-         InlineKeyboardButton("❓ Help", callback_data='help')],
-        [InlineKeyboardButton("🔙 Back to Main Menu", callback_data='main_menu')]
+        [InlineKeyboardButton("ℹ️ معلومات", callback_data='info'),
+         InlineKeyboardButton("🆔 الأيدي", callback_data='id')],
+        [InlineKeyboardButton("📜 القوانين", callback_data='rules'),
+         InlineKeyboardButton("❓ مساعدة", callback_data='help')],
+        [InlineKeyboardButton("🔙 العودة للقائمة", callback_data='main_menu')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     query = update.callback_query
     query.answer()
-    query.edit_message_text('User Commands:', reply_markup=reply_markup)
+    query.edit_message_text('أوامر المستخدمين:', reply_markup=reply_markup)
 
 def fun_commands(update: Update, context: CallbackContext) -> None:
-    """Show fun commands."""
+    """عرض أوامر التسلية."""
     keyboard = [
-        [InlineKeyboardButton("🎲 Roll Dice", callback_data='roll_dice'),
-         InlineKeyboardButton("🪙 Flip Coin", callback_data='flip_coin')],
-        [InlineKeyboardButton("🔢 Random Number", callback_data='random_number'),
-         InlineKeyboardButton("💬 Quote", callback_data='quote')],
-        [InlineKeyboardButton("🔙 Back to Main Menu", callback_data='main_menu')]
+        [InlineKeyboardButton("🎲 رمي نرد", callback_data='roll_dice'),
+         InlineKeyboardButton("🪙 عملة معدنية", callback_data='flip_coin')],
+        [InlineKeyboardButton("🔢 رقم عشوائي", callback_data='random_number'),
+         InlineKeyboardButton("💬 حكمة", callback_data='quote')],
+        [InlineKeyboardButton("🔙 العودة للقائمة", callback_data='main_menu')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     query = update.callback_query
     query.answer()
-    query.edit_message_text('Fun Commands:', reply_markup=reply_markup)
+    query.edit_message_text('أوامر التسلية:', reply_markup=reply_markup)
 
 def settings(update: Update, context: CallbackContext) -> None:
-    """Show settings."""
+    """عرض الإعدادات."""
     keyboard = [
-        [InlineKeyboardButton("👋 Welcome Message", callback_data='set_welcome'),
-         InlineKeyboardButton("👋 Goodbye Message", callback_data='set_goodbye')],
-        [InlineKeyboardButton("📜 Chat Rules", callback_data='set_rules'),
-         InlineKeyboardButton("🛡️ Anti-Spam", callback_data='set_antispam')],
-        [InlineKeyboardButton("🌊 Anti-Flood", callback_data='set_antiflood')],
-        [InlineKeyboardButton("🔙 Back to Main Menu", callback_data='main_menu')]
+        [InlineKeyboardButton("👋 رسالة الترحيب", callback_data='set_welcome'),
+         InlineKeyboardButton("👋 رسالة الوداع", callback_data='set_goodbye')],
+        [InlineKeyboardButton("📜 قوانين الدردشة", callback_data='set_rules'),
+         InlineKeyboardButton("🛡️ مانع السبام", callback_data='set_antispam')],
+        [InlineKeyboardButton("🌊 مانع التكرار", callback_data='set_antiflood')],
+        [InlineKeyboardButton("🔙 العودة للقائمة", callback_data='main_menu')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     query = update.callback_query
     query.answer()
-    query.edit_message_text('Settings:', reply_markup=reply_markup)
+    query.edit_message_text('الإعدادات:', reply_markup=reply_markup)
 
 def ban(update: Update, context: CallbackContext) -> None:
-    """Ban a user."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """حظر مستخدم."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     chat_id = update.effective_chat.id
     
     if not bot_has_admin_rights(context, chat_id):
-        update.message.reply_text("❌ I don't have admin rights in this chat. I can't ban users.")
+        update.message.reply_text("❌ أنا لست مشرفاً هنا، لا يمكنني حظر الأعضاء.")
         return
     
     if update.message.reply_to_message:
         user_id = update.message.reply_to_message.from_user.id
         try:
             context.bot.ban_chat_member(chat_id, user_id)
-            update.message.reply_text(f"🚫 User {user_id} has been banned.")
+            update.message.reply_text(f"🚫 تم حظر المستخدم {user_id}.")
         except telegram.error.TelegramError as e:
-            update.message.reply_text(f"❌ Failed to ban user: {str(e)}")
+            update.message.reply_text(f"❌ فشل الحظر: {str(e)}")
     else:
-        update.message.reply_text("Please reply to a message to ban the user.")
+        update.message.reply_text("يرجى الرد على رسالة المستخدم لحظره.")
 
 def unban(update: Update, context: CallbackContext) -> None:
-    """Unban a user."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """إلغاء حظر مستخدم."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     chat_id = update.effective_chat.id
     
     if not bot_has_admin_rights(context, chat_id):
-        update.message.reply_text("❌ I don't have admin rights in this chat. I can't unban users.")
+        update.message.reply_text("❌ أنا لست مشرفاً هنا.")
         return
     
     if context.args:
         user_id = int(context.args[0])
         try:
             context.bot.unban_chat_member(chat_id, user_id)
-            update.message.reply_text(f"✅ User {user_id} has been unbanned.")
+            update.message.reply_text(f"✅ تم إلغاء حظر المستخدم {user_id}.")
         except telegram.error.TelegramError as e:
-            update.message.reply_text(f"❌ Failed to unban user: {str(e)}")
+            update.message.reply_text(f"❌ فشل إلغاء الحظر: {str(e)}")
     else:
-        update.message.reply_text("Please provide a user ID to unban.")
+        update.message.reply_text("يرجى تزويد أيدي المستخدم لإلغاء حظره.")
 
 def kick(update: Update, context: CallbackContext) -> None:
-    """Kick a user."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """طرد مستخدم."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     chat_id = update.effective_chat.id
     
     if not bot_has_admin_rights(context, chat_id):
-        update.message.reply_text("❌ I don't have admin rights in this chat. I can't kick users.")
+        update.message.reply_text("❌ أنا لست مشرفاً هنا.")
         return
     
     if update.message.reply_to_message:
@@ -208,22 +208,22 @@ def kick(update: Update, context: CallbackContext) -> None:
         try:
             context.bot.kick_chat_member(chat_id, user_id)
             context.bot.unban_chat_member(chat_id, user_id)
-            update.message.reply_text(f"👢 User {user_id} has been kicked.")
+            update.message.reply_text(f"👢 تم طرد المستخدم {user_id}.")
         except telegram.error.TelegramError as e:
-            update.message.reply_text(f"❌ Failed to kick user: {str(e)}")
+            update.message.reply_text(f"❌ فشل الطرد: {str(e)}")
     else:
-        update.message.reply_text("Please reply to a message to kick the user.")
+        update.message.reply_text("يرجى الرد على رسالة المستخدم لطرده.")
 
 def mute(update: Update, context: CallbackContext) -> None:
-    """Mute a user."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """كتم مستخدم."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     chat_id = update.effective_chat.id
     
     if not bot_has_admin_rights(context, chat_id):
-        update.message.reply_text("❌ I don't have admin rights in this chat. I can't mute users.")
+        update.message.reply_text("❌ أنا لست مشرفاً هنا.")
         return
     
     if update.message.reply_to_message:
@@ -239,22 +239,22 @@ def mute(update: Update, context: CallbackContext) -> None:
                     can_add_web_page_previews=False
                 )
             )
-            update.message.reply_text(f"🔇 User {user_id} has been muted.")
+            update.message.reply_text(f"🔇 تم كتم المستخدم {user_id}.")
         except telegram.error.TelegramError as e:
-            update.message.reply_text(f"❌ Failed to mute user: {str(e)}")
+            update.message.reply_text(f"❌ فشل الكتم: {str(e)}")
     else:
-        update.message.reply_text("Please reply to a message to mute the user.")
+        update.message.reply_text("يرجى الرد على رسالة المستخدم لكتمه.")
 
 def unmute(update: Update, context: CallbackContext) -> None:
-    """Unmute a user."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """إلغاء كتم مستخدم."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     chat_id = update.effective_chat.id
     
     if not bot_has_admin_rights(context, chat_id):
-        update.message.reply_text("❌ I don't have admin rights in this chat. I can't unmute users.")
+        update.message.reply_text("❌ أنا لست مشرفاً هنا.")
         return
     
     if update.message.reply_to_message:
@@ -270,16 +270,16 @@ def unmute(update: Update, context: CallbackContext) -> None:
                     can_add_web_page_previews=True
                 )
             )
-            update.message.reply_text(f"🔊 User {user_id} has been unmuted.")
+            update.message.reply_text(f"🔊 تم إلغاء كتم المستخدم {user_id}.")
         except telegram.error.TelegramError as e:
-            update.message.reply_text(f"❌ Failed to unmute user: {str(e)}")
+            update.message.reply_text(f"❌ فشل إلغاء الكتم: {str(e)}")
     else:
-        update.message.reply_text("Please reply to a message to unmute the user.")
+        update.message.reply_text("يرجى الرد على رسالة المستخدم لإلغاء كتمه.")
 
 def warn(update: Update, context: CallbackContext) -> None:
-    """Warn a user."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """تحذير مستخدم."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     if update.message.reply_to_message:
@@ -295,23 +295,23 @@ def warn(update: Update, context: CallbackContext) -> None:
         user_data[chat_id][user_id]["warnings"] += 1
         warn_count = user_data[chat_id][user_id]["warnings"]
         
-        update.message.reply_text(f"⚠️ User {warned_user.mention_markdown_v2()} has been warned\. "
-                                  f"Warning count: {warn_count}", parse_mode='MarkdownV2')
+        update.message.reply_text(f"⚠️ المستخدم {warned_user.mention_markdown_v2()} تلقى تحذيراً\. "
+                                  f"عدد التحذيرات: {warn_count}", parse_mode='MarkdownV2')
         
         if warn_count >= 3:
             try:
                 context.bot.kick_chat_member(chat_id, user_id)
-                update.message.reply_text(f"🚫 User {warned_user.mention_markdown_v2()} has been banned due to excessive warnings\.", 
+                update.message.reply_text(f"🚫 تم حظر {warned_user.mention_markdown_v2()} بسبب تجاوز عدد التحذيرات المسموح بها\.", 
                                           parse_mode='MarkdownV2')
             except telegram.error.TelegramError as e:
-                update.message.reply_text(f"❌ Failed to ban user: {str(e)}")
+                update.message.reply_text(f"❌ فشل الحظر: {str(e)}")
     else:
-        update.message.reply_text("Please reply to a message to warn the user.")
+        update.message.reply_text("يرجى الرد على رسالة المستخدم لتحذيره.")
 
 def unwarn(update: Update, context: CallbackContext) -> None:
-    """Remove a warning from a user."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """إزالة تحذير من مستخدم."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     if update.message.reply_to_message:
@@ -323,30 +323,30 @@ def unwarn(update: Update, context: CallbackContext) -> None:
             if user_data[chat_id][user_id]["warnings"] > 0:
                 user_data[chat_id][user_id]["warnings"] -= 1
                 warn_count = user_data[chat_id][user_id]["warnings"]
-                update.message.reply_text(f"🔄 One warning has been removed from {user.mention_markdown_v2()}\. "
-                                          f"Current warning count: {warn_count}", parse_mode='MarkdownV2')
+                update.message.reply_text(f"🔄 تم إزالة تحذير واحد من {user.mention_markdown_v2()}\. "
+                                          f"عدد التحذيرات الحالي: {warn_count}", parse_mode='MarkdownV2')
             else:
-                update.message.reply_text(f"{user.mention_markdown_v2()} has no warnings to remove\.", parse_mode='MarkdownV2')
+                update.message.reply_text(f"المستخدم {user.mention_markdown_v2()} ليس لديه تحذيرات لإزالتها\.", parse_mode='MarkdownV2')
         else:
-            update.message.reply_text(f"{user.mention_markdown_v2()} has no warnings\.", parse_mode='MarkdownV2')
+            update.message.reply_text(f"المستخدم {user.mention_markdown_v2()} ليس لديه تحذيرات\.", parse_mode='MarkdownV2')
     else:
-        update.message.reply_text("Please reply to a message to remove a warning from the user.")
+        update.message.reply_text("يرجى الرد على رسالة المستخدم لإزالة التحذير.")
 
 def promote(update: Update, context: CallbackContext) -> None:
-    """Promote a user to admin with an optional custom tag."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """ترقية مستخدم لمشرف."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     chat_id = update.effective_chat.id
     
     if not bot_has_admin_rights(context, chat_id):
-        update.message.reply_text("❌ I don't have admin rights in this chat. I can't promote users.")
+        update.message.reply_text("❌ أحتاج لصلاحيات مشرف لترقية الأعضاء.")
         return
     
     if update.message.reply_to_message:
         user_id = update.message.reply_to_message.from_user.id
-        custom_title = ' '.join(context.args) if context.args else "Admin"
+        custom_title = ' '.join(context.args) if context.args else "مشرف"
         
         try:
             context.bot.promote_chat_member(chat_id, user_id,
@@ -359,25 +359,22 @@ def promote(update: Update, context: CallbackContext) -> None:
             
             context.bot.set_chat_administrator_custom_title(chat_id, user_id, custom_title)
             
-            update.message.reply_text(f"🎖️ User {user_id} has been promoted to admin with the title: {custom_title}")
+            update.message.reply_text(f"🎖️ تم رفع المستخدم {user_id} مشرفاً بلقب: {custom_title}")
         except telegram.error.TelegramError as e:
-            if "Chat_admin_required" in str(e):
-                update.message.reply_text("❌ I don't have sufficient rights to promote users in this chat.")
-            else:
-                update.message.reply_text(f"❌ Failed to promote user: {str(e)}")
+            update.message.reply_text(f"❌ فشل الترقية: {str(e)}")
     else:
-        update.message.reply_text("Please reply to a message to promote the user.")
+        update.message.reply_text("يرجى الرد على رسالة المستخدم لترقيته.")
 
 def demote(update: Update, context: CallbackContext) -> None:
-    """Demote an admin to regular user."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """تنزيل مشرف لرتبة مستخدم."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     chat_id = update.effective_chat.id
     
     if not bot_has_admin_rights(context, chat_id):
-        update.message.reply_text("❌ I don't have admin rights in this chat. I can't demote users.")
+        update.message.reply_text("❌ أحتاج لصلاحيات مشرف.")
         return
     
     if update.message.reply_to_message:
@@ -390,27 +387,27 @@ def demote(update: Update, context: CallbackContext) -> None:
                                             can_restrict_members=False,
                                             can_pin_messages=False,
                                             can_promote_members=False)
-            update.message.reply_text(f"⬇️ User {user_id} has been demoted to regular user.")
+            update.message.reply_text(f"⬇️ تم تنزيل المستخدم {user_id} لرتبة مستخدم عادي.")
         except telegram.error.TelegramError as e:
-            update.message.reply_text(f"❌ Failed to demote user: {str(e)}")
+            update.message.reply_text(f"❌ فشل التنزيل: {str(e)}")
     else:
-        update.message.reply_text("Please reply to a message to demote the user.")
+        update.message.reply_text("يرجى الرد على رسالة المشرف لتنزيله.")
 
 def purge(update: Update, context: CallbackContext) -> None:
-    """Purge a specified number of messages."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """حذف عدد معين من الرسائل."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     chat_id = update.effective_chat.id
     if not context.args:
-        update.message.reply_text("Please specify the number of messages to purge.")
+        update.message.reply_text("يرجى تحديد عدد الرسائل المراد حذفها.")
         return
     
     try:
         num_messages = int(context.args[0])
     except ValueError:
-        update.message.reply_text("Please provide a valid number of messages to purge.")
+        update.message.reply_text("يرجى إدخال رقم صحيح.")
         return
     
     if update.message.reply_to_message:
@@ -424,14 +421,14 @@ def purge(update: Update, context: CallbackContext) -> None:
             except telegram.error.BadRequest:
                 pass
         
-        update.message.reply_text(f"🧹 Purged {deleted_count} messages.")
+        update.message.reply_text(f"🧹 تم تنظيف {deleted_count} رسالة.")
     else:
-        update.message.reply_text("Please reply to the message from where you want to start purging.")
+        update.message.reply_text("يرجى الرد على الرسالة التي تريد البدء بالحذف منها.")
 
 def announcement(update: Update, context: CallbackContext) -> None:
-    """Send an announcement to all chats where the bot is present."""
+    """إرسال إعلان لجميع المجموعات."""
     if update.effective_user.id != OWNER_ID:
-        update.message.reply_text("🚫 Only the bot owner can use this command.")
+        update.message.reply_text("🚫 هذا الأمر لمالك البوت فقط.")
         return
     
     message_reply = update.message.reply_to_message
@@ -440,7 +437,7 @@ def announcement(update: Update, context: CallbackContext) -> None:
     elif context.args:
         msj = ' '.join(context.args)
     else:
-        update.message.reply_text("Please provide an announcement message or reply to a message.")
+        update.message.reply_text("يرجى تزويد نص الإعلان أو الرد على رسالة.")
         return
 
     chats = context.bot.get_updates()
@@ -457,20 +454,18 @@ def announcement(update: Update, context: CallbackContext) -> None:
                 context.bot.send_message(chat_id, msj)
             successful_sends += 1
         except Exception as e:
-            logger.error(f"Failed to send announcement to chat {chat_id}: {e}")
             failed_sends += 1
 
-    update.message.reply_text(f"Announcement sent to {successful_sends} chats. Failed in {failed_sends} chats.")
+    update.message.reply_text(f"تم إرسال الإعلان لـ {successful_sends} دردشة. فشل في {failed_sends}.")
 
 def gban(update: Update, context: CallbackContext) -> None:
-    """Global ban a user from all chats where the bot is present."""
+    """حظر عالمي للمستخدم."""
     if not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 Only the bot owner can use this command.")
+        update.message.reply_text("🚫 هذا الأمر لمالك البوت فقط.")
         return
     if update.message.reply_to_message:
         user_id = update.message.reply_to_message.from_user.id
         try:
-            # Get all chats where the bot is a member
             chats = context.bot.get_updates()
             chat_ids = set(update.message.chat.id for update in chats if update.message)
             
@@ -480,22 +475,22 @@ def gban(update: Update, context: CallbackContext) -> None:
                 except Exception:
                     continue
             
-            update.message.reply_text(f"🌐🚫 User {user_id} has been globally banned from all chats.")
+            update.message.reply_text(f"🌐🚫 تم حظر المستخدم {user_id} عالمياً من جميع الدردشات.")
         except Exception as e:
-            update.message.reply_text(f"❌ Failed to globally ban user: {str(e)}")
+            update.message.reply_text(f"❌ فشل الحظر العالمي: {str(e)}")
     else:
-        update.message.reply_text("Please reply to a message to globally ban the user.")
+        update.message.reply_text("يرجى الرد على رسالة المستخدم لحظره عالمياً.")
 
 def filter_message(update: Update, context: CallbackContext) -> None:
-    """Save a message as a filter."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """حفظ رسالة كفلتر."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     chat_id = update.effective_chat.id
     if update.message.reply_to_message:
         if not context.args:
-            update.message.reply_text("Please provide a keyword for the filter.")
+            update.message.reply_text("يرجى تزويد كلمة مفتاحية للفلتر.")
             return
         
         keyword = context.args[0].lower()
@@ -517,43 +512,43 @@ def filter_message(update: Update, context: CallbackContext) -> None:
             "audio": message.audio.file_id if message.audio else None,
         }
         
-        update.message.reply_text(f"Filter '{keyword}' has been saved.")
+        update.message.reply_text(f"تم حفظ الفلتر '{keyword}'.")
     else:
-        update.message.reply_text("Please reply to a message to save it as a filter.")
+        update.message.reply_text("يرجى الرد على رسالة لحفظها كفلتر.")
 
 def stop_filter(update: Update, context: CallbackContext) -> None:
-    """Remove a filter."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """إزالة فلتر."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     chat_id = update.effective_chat.id
     if not context.args:
-        update.message.reply_text("Please specify the filter keyword to remove.")
+        update.message.reply_text("يرجى تحديد الكلمة المفتاحية للفلتر المراد حذفه.")
         return
     
     keyword = context.args[0].lower()
     
     if chat_id in user_data and "filters" in user_data[chat_id] and keyword in user_data[chat_id]["filters"]:
         del user_data[chat_id]["filters"][keyword]
-        update.message.reply_text(f"Filter '{keyword}' has been removed.")
+        update.message.reply_text(f"تم إزالة الفلتر '{keyword}'.")
     else:
-        update.message.reply_text(f"Filter '{keyword}' does not exist.")
+        update.message.reply_text(f"الفلتر '{keyword}' غير موجود.")
 
 def filter_list(update: Update, context: CallbackContext) -> None:
-    """Show all active filters in the chat."""
+    """عرض جميع الفلاتر النشطة."""
     chat_id = update.effective_chat.id
     
     if chat_id in user_data and "filters" in user_data[chat_id] and user_data[chat_id]["filters"]:
-        filter_list = "Active filters in this chat:\n\n"
+        f_list = "الفلاتر النشطة في هذه الدردشة:\n\n"
         for keyword in user_data[chat_id]["filters"].keys():
-            filter_list += f"- {keyword}\n"
-        update.message.reply_text(filter_list)
+            f_list += f"- {keyword}\n"
+        update.message.reply_text(f_list)
     else:
-        update.message.reply_text("There are no active filters in this chat.")
+        update.message.reply_text("لا توجد فلاتر نشطة حالياً.")
 
 def handle_filters(update: Update, context: CallbackContext) -> None:
-    """Check incoming messages for filters and respond accordingly."""
+    """التحقق من الرسائل الواردة للفلاتر."""
     chat_id = update.effective_chat.id
     message_text = update.message.text.lower() if update.message.text else ""
     
@@ -579,15 +574,15 @@ def handle_filters(update: Update, context: CallbackContext) -> None:
                 break
 
 def lockall(update: Update, context: CallbackContext) -> None:
-    """Lock all permissions in the chat."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """قفل جميع الصلاحيات."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     chat_id = update.effective_chat.id
     
     if not bot_has_admin_rights(context, chat_id):
-        update.message.reply_text("❌ I don't have admin rights in this chat. I can't lock permissions.")
+        update.message.reply_text("❌ أحتاج لصلاحيات مشرف.")
         return
     
     try:
@@ -604,20 +599,20 @@ def lockall(update: Update, context: CallbackContext) -> None:
                 can_pin_messages=False
             )
         )
-        update.message.reply_text("🔒 All chat permissions have been locked.")
+        update.message.reply_text("🔒 تم قفل جميع صلاحيات الدردشة.")
     except telegram.error.TelegramError as e:
-        update.message.reply_text(f"❌ Failed to lock chat permissions: {str(e)}")
+        update.message.reply_text(f"❌ فشل القفل: {str(e)}")
 
 def unlockall(update: Update, context: CallbackContext) -> None:
-    """Unlock all permissions in the chat."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """فتح جميع الصلاحيات."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية استخدام هذا الأمر.")
         return
     
     chat_id = update.effective_chat.id
     
     if not bot_has_admin_rights(context, chat_id):
-        update.message.reply_text("❌ I don't have admin rights in this chat. I can't unlock permissions.")
+        update.message.reply_text("❌ أنا لست مشرفاً هنا.")
         return
     
     try:
@@ -634,20 +629,20 @@ def unlockall(update: Update, context: CallbackContext) -> None:
                 can_pin_messages=True
             )
         )
-        update.message.reply_text("🔓 All chat permissions have been unlocked.")
+        update.message.reply_text("🔓 تم فتح جميع صلاحيات الدردشة.")
     except telegram.error.TelegramError as e:
-        update.message.reply_text(f"❌ Failed to unlock chat permissions: {str(e)}")
+        update.message.reply_text(f"❌ فشل الفتح: {str(e)}")
 
 def delete_and_warn(update: Update, context: CallbackContext) -> None:
-    """Delete a message and warn the user."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """حذف رسالة وتحذير المستخدم."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية.")
         return
     
     chat_id = update.effective_chat.id
     
     if not bot_has_admin_rights(context, chat_id):
-        update.message.reply_text("❌ I don't have admin rights in this chat. I can't delete messages or warn users.")
+        update.message.reply_text("❌ أنا لست مشرفاً.")
         return
     
     if update.message.reply_to_message:
@@ -655,10 +650,8 @@ def delete_and_warn(update: Update, context: CallbackContext) -> None:
         user_to_warn = message_to_delete.from_user
         
         try:
-            # Delete the message
             context.bot.delete_message(chat_id, message_to_delete.message_id)
             
-            # Warn the user
             if chat_id not in user_data:
                 user_data[chat_id] = {}
             if user_to_warn.id not in user_data[chat_id]:
@@ -667,32 +660,27 @@ def delete_and_warn(update: Update, context: CallbackContext) -> None:
             user_data[chat_id][user_to_warn.id]["warnings"] += 1
             warn_count = user_data[chat_id][user_to_warn.id]["warnings"]
             
-            update.message.reply_text(f"🗑️⚠️ Message deleted and user {user_to_warn.mention_markdown_v2()} warned\. "
-                                      f"Warning count: {warn_count}", parse_mode='MarkdownV2')
+            update.message.reply_text(f"🗑️⚠️ تم حذف الرسالة وتحذير {user_to_warn.mention_markdown_v2()}\. "
+                                      f"عدد تحذيراته: {warn_count}", parse_mode='MarkdownV2')
             
             if warn_count >= 3:
-                try:
-                    context.bot.kick_chat_member(chat_id, user_to_warn.id)
-                    update.message.reply_text(f"🚫 User {user_to_warn.mention_markdown_v2()} has been banned due to excessive warnings\.", 
-                                              parse_mode='MarkdownV2')
-                except telegram.error.TelegramError as e:
-                    update.message.reply_text(f"❌ Failed to ban user: {str(e)}")
-        
+                context.bot.kick_chat_member(chat_id, user_to_warn.id)
+                update.message.reply_text(f"🚫 تم حظر {user_to_warn.mention_markdown_v2()} لتجاوز التحذيرات\.", parse_mode='MarkdownV2')
         except telegram.error.TelegramError as e:
-            update.message.reply_text(f"❌ Failed to delete message and warn user: {str(e)}")
+            update.message.reply_text(f"❌ حدث خطأ: {str(e)}")
     else:
-        update.message.reply_text("Please reply to a message to delete it and warn the user.")
+        update.message.reply_text("يرجى الرد على رسالة لحذفها وتحذير صاحبها.")
 
 def delete_and_mute(update: Update, context: CallbackContext) -> None:
-    """Delete a message and mute the user."""
-    if not is_admin(update, context) and not is_owner(update.effective_user.id):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+    """حذف رسالة وكتم المستخدم."""
+    if not is_admin(update, context):
+        update.message.reply_text("🚫 لا تملك صلاحية.")
         return
     
     chat_id = update.effective_chat.id
     
     if not bot_has_admin_rights(context, chat_id):
-        update.message.reply_text("❌ I don't have admin rights in this chat. I can't delete messages or mute users.")
+        update.message.reply_text("❌ أنا لست مشرفاً.")
         return
     
     if update.message.reply_to_message:
@@ -700,10 +688,7 @@ def delete_and_mute(update: Update, context: CallbackContext) -> None:
         user_to_mute = message_to_delete.from_user
         
         try:
-            # Delete the message
             context.bot.delete_message(chat_id, message_to_delete.message_id)
-            
-            # Mute the user
             context.bot.restrict_chat_member(
                 chat_id, 
                 user_to_mute.id, 
@@ -714,243 +699,237 @@ def delete_and_mute(update: Update, context: CallbackContext) -> None:
                     can_add_web_page_previews=False
                 )
             )
-            
-            update.message.reply_text(f"🗑️🔇 Message deleted and user {user_to_mute.mention_markdown_v2()} muted\.", 
+            update.message.reply_text(f"🗑️🔇 تم حذف الرسالة وكتم {user_to_mute.mention_markdown_v2()}\.", 
                                       parse_mode='MarkdownV2')
-        
         except telegram.error.TelegramError as e:
-            update.message.reply_text(f"❌ Failed to delete message and mute user: {str(e)}")
+            update.message.reply_text(f"❌ حدث خطأ: {str(e)}")
     else:
-        update.message.reply_text("Please reply to a message to delete it and mute the user.")
+        update.message.reply_text("يرجى الرد على رسالة لحذفها وكتم صاحبها.")
 
 def info(update: Update, context: CallbackContext) -> None:
-    """Show user and chat information."""
+    """عرض معلومات المستخدم والدردشة."""
     user = update.effective_user
     chat = update.effective_chat
 
     if chat.type == 'private':
-        info_text = f"👤 User Information:\n" \
-                    f"Name: {user.full_name}\n" \
-                    f"Username: @{user.username}\n" \
-                    f"User ID: {user.id}\n"
+        info_text = f"👤 معلومات المستخدم:\n" \
+                    f"الاسم: {user.full_name}\n" \
+                    f"المعرف: @{user.username}\n" \
+                    f"الأيدي: {user.id}\n"
     else:
         member_count = context.bot.get_chat_member_count(chat.id)
-        info_text = f"👤 User Information:\n" \
-                    f"Name: {user.full_name}\n" \
-                    f"Username: @{user.username}\n" \
-                    f"User ID: {user.id}\n\n" \
-                    f"💬 Chat Information:\n" \
-                    f"Title: {chat.title}\n" \
-                    f"Type: {chat.type}\n" \
-                    f"Chat ID: {chat.id}\n" \
-                    f"Member Count: {member_count}\n"
+        info_text = f"👤 معلومات المستخدم:\n" \
+                    f"الاسم: {user.full_name}\n" \
+                    f"المعرف: @{user.username}\n" \
+                    f"الأيدي: {user.id}\n\n" \
+                    f"💬 معلومات الدردشة:\n" \
+                    f"العنوان: {chat.title}\n" \
+                    f"النوع: {chat.type}\n" \
+                    f"أيدي الدردشة: {chat.id}\n" \
+                    f"عدد الأعضاء: {member_count}\n"
 
     if chat.id in user_data and user.id in user_data[chat.id]:
         warnings = user_data[chat.id][user.id].get("warnings", 0)
-        info_text += f"\nWarnings: {warnings}"
+        info_text += f"\nالتحذيرات: {warnings}"
 
-    keyboard = [[InlineKeyboardButton("🔙 Back to Main Menu", callback_data='main_menu')]]
+    keyboard = [[InlineKeyboardButton("🔙 العودة للقائمة", callback_data='main_menu')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     update.message.reply_text(info_text, reply_markup=reply_markup)
 
 def id_command(update: Update, context: CallbackContext) -> None:
-    """Show user and chat IDs in an easy-to-copy format."""
+    """عرض الأيديات بشكل سهل للنسخ."""
     user = update.effective_user
     chat = update.effective_chat
 
-    id_text = f"User ID: `{user.id}`\n"
+    id_text = f"أيدي المستخدم: `{user.id}`\n"
     if chat.type != 'private':
-        id_text += f"Chat ID: `{chat.id}`"
+        id_text += f"أيدي الدردشة: `{chat.id}`"
 
-    keyboard = [[InlineKeyboardButton("🔙 Back to Main Menu", callback_data='main_menu')]]
+    keyboard = [[InlineKeyboardButton("🔙 العودة للقائمة", callback_data='main_menu')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     update.message.reply_text(id_text, parse_mode='Markdown', reply_markup=reply_markup)
 
 def rules(update: Update, context: CallbackContext) -> None:
-    """Show chat rules."""
+    """عرض قوانين الدردشة."""
     chat_id = update.effective_chat.id
 
     if chat_id in user_data and "rules" in user_data[chat_id]:
-        rules_text = f"📜 Chat Rules:\n\n{user_data[chat_id]['rules']}"
+        rules_text = f"📜 قوانين الدردشة:\n\n{user_data[chat_id]['rules']}"
     else:
-        rules_text = "No rules have been set for this chat."
+        rules_text = "لم يتم وضع قوانين لهذه الدردشة بعد."
 
-    keyboard = [[InlineKeyboardButton("🔙 Back to Main Menu", callback_data='main_menu')]]
+    keyboard = [[InlineKeyboardButton("🔙 العودة للقائمة", callback_data='main_menu')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     update.message.reply_text(rules_text, reply_markup=reply_markup)
 
 def help_command(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
-    help_text = "🌼 DaisyBot Help 🌼\n\n" \
-                "Here are some available commands:\n\n" \
-                "/start - Start the bot\n" \
-                "/help - Show this help message\n" \
-                "/info - Show user and chat information\n" \
-                "/id - Show user and chat IDs\n" \
-                "/rules - Show chat rules\n" \
-                "/ban - Ban a user (admin only)\n" \
-                "/unban - Unban a user (admin only)\n" \
-                "/kick - Kick a user (admin only)\n" \
-                "/mute - Mute a user (admin only)\n" \
-                "/unmute - Unmute a user (admin only)\n" \
-                "/warn - Warn a user (admin only)\n" \
-                "/unwarn - Remove a warning from a user (admin only)\n" \
-                "/roll_dice - Roll a dice\n" \
-                "/flip_coin - Flip a coin\n" \
-                "/random_number - Generate a random number\n" \
-                "/quote - Get a random quote\n\n" \
-                f"Bot managed by: {OWNER_USERNAME}"
+    """إرسال رسالة مساعدة."""
+    help_text = "🌼 مساعدة بوت ديزي 🌼\n\n" \
+                "إليك بعض الأوامر المتاحة:\n\n" \
+                "start - تشغيل البوت\n" \
+                "help - عرض رسالة المساعدة هذه\n" \
+                "info - عرض معلومات المستخدم والدردشة\n" \
+                "id - عرض الأيديات\n" \
+                "rules - عرض قوانين الدردشة\n" \
+                "ban - حظر مستخدم (للمشرفين)\n" \
+                "unban - إلغاء حظر (للمشرفين)\n" \
+                "kick - طرد مستخدم (للمشرفين)\n" \
+                "mute - كتم مستخدم (للمشرفين)\n" \
+                "unmute - إلغاء كتم (للمشرفين)\n" \
+                "warn - تحذير مستخدم (للمشرفين)\n" \
+                "unwarn - إزالة تحذير (للمشرفين)\n" \
+                "roll_dice - رمي نرد\n" \
+                "flip_coin - عملة معدنية\n" \
+                "random_number - رقم عشوائي\n" \
+                "quote - الحصول على حكمة عشوائية\n\n" \
+                f"يتم إدارة البوت بواسطة: {OWNER_USERNAME}"
 
-    keyboard = [[InlineKeyboardButton("🔙 Back to Main Menu", callback_data='main_menu')]]
+    keyboard = [[InlineKeyboardButton("🔙 العودة للقائمة", callback_data='main_menu')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     update.message.reply_text(help_text, reply_markup=reply_markup)
 
 def roll_dice(update: Update, context: CallbackContext) -> None:
-    """Roll a dice."""
+    """رمي نرد."""
     result = random.randint(1, 6)
-    update.message.reply_text(f"🎲 You rolled a {result}!")
+    update.message.reply_text(f"🎲 لقد حصلت على الرقم {result}!")
 
 def flip_coin(update: Update, context: CallbackContext) -> None:
-    """Flip a coin."""
-    result = random.choice(["Heads", "Tails"])
-    update.message.reply_text(f"🪙 The coin landed on: {result}!")
+    """رمي عملة معدنية."""
+    result = random.choice(["ملك", "كتابة"])
+    update.message.reply_text(f"🪙 النتيجة هي: {result}!")
 
 def random_number(update: Update, context: CallbackContext) -> None:
-    """Generate a random number between 1 and 100."""
+    """توليد رقم عشوائي."""
     result = random.randint(1, 100)
-    update.message.reply_text(f"🔢 Your random number is: {result}")
+    update.message.reply_text(f"🔢 رقمك العشوائي هو: {result}")
 
 def quote(update: Update, context: CallbackContext) -> None:
-    """Send a random quote."""
+    """إرسال حكمة عشوائية."""
     quotes = [
-        "Be the change you wish to see in the world. - Mahatma Gandhi",
-        "Stay hungry, stay foolish. - Steve Jobs",
-        "The only way to do great work is to love what you do. - Steve Jobs",
-        "Life is what happens when you're busy making other plans. - John Lennon",
-        "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt"
+        "كن التغيير الذي تريد أن تراه في العالم. - غاندي",
+        "ابق جائعاً، ابق أحمقاً. - ستيف جوبز",
+        "الطريقة الوحيدة للقيام بعمل رائع هي أن تحب ما تفعله. - ستيف جوبز",
+        "الحياة هي ما يحدث بينما أنت مشغول في وضع خطط أخرى. - جون لينون",
+        "المستقبل ينتمي لأولئك الذين يؤمنون بجمال أحلامهم. - إليانور روزفلت"
     ]
     chosen_quote = random.choice(quotes)
     update.message.reply_text(f"📜 {chosen_quote}")
 
 def set_welcome(update: Update, context: CallbackContext) -> None:
-    """Set welcome message."""
+    """إعداد رسالة الترحيب."""
     if not is_admin(update, context):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+        update.message.reply_text("🚫 لا تملك صلاحية.")
         return
     chat_id = update.effective_chat.id
     if not context.args:
-        update.message.reply_text("Please provide a welcome message.")
+        update.message.reply_text("يرجى كتابة نص الترحيب.")
         return
 
     welcome_message = ' '.join(context.args)
     if chat_id not in user_data:
         user_data[chat_id] = {}
     user_data[chat_id]["welcome_message"] = welcome_message
-    update.message.reply_text("👋 Welcome message has been set.")
+    update.message.reply_text("👋 تم تعيين رسالة الترحيب بنجاح.")
 
 def set_goodbye(update: Update, context: CallbackContext) -> None:
-    """Set goodbye message."""
+    """إعداد رسالة الوداع."""
     if not is_admin(update, context):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+        update.message.reply_text("🚫 لا تملك صلاحية.")
         return
     chat_id = update.effective_chat.id
     if not context.args:
-        update.message.reply_text("Please provide a goodbye message.")
+        update.message.reply_text("يرجى كتابة نص الوداع.")
         return
 
     goodbye_message = ' '.join(context.args)
     if chat_id not in user_data:
         user_data[chat_id] = {}
     user_data[chat_id]["goodbye_message"] = goodbye_message
-    update.message.reply_text("👋 Goodbye message has been set.")
+    update.message.reply_text("👋 تم تعيين رسالة الوداع بنجاح.")
 
 def set_rules(update: Update, context: CallbackContext) -> None:
-    """Set chat rules."""
+    """إعداد قوانين الدردشة."""
     if not is_admin(update, context):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+        update.message.reply_text("🚫 لا تملك صلاحية.")
         return
     chat_id = update.effective_chat.id
     if not context.args:
-        update.message.reply_text("Please provide the chat rules.")
+        update.message.reply_text("يرجى كتابة القوانين.")
         return
 
-    rules = ' '.join(context.args)
+    rules_txt = ' '.join(context.args)
     if chat_id not in user_data:
         user_data[chat_id] = {}
-    user_data[chat_id]["rules"] = rules
-    update.message.reply_text("📜 Chat rules have been set.")
+    user_data[chat_id]["rules"] = rules_txt
+    update.message.reply_text("📜 تم تعيين قوانين الدردشة بنجاح.")
 
 def set_antispam(update: Update, context: CallbackContext) -> None:
-    """Set anti-spam settings."""
+    """إعداد مانع السبام."""
     if not is_admin(update, context):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+        update.message.reply_text("🚫 لا تملك صلاحية.")
         return
     chat_id = update.effective_chat.id
     if not context.args or len(context.args) != 2:
-        update.message.reply_text("Please provide the number of messages and time frame in seconds.")
+        update.message.reply_text("يرجى تحديد عدد الرسائل والمدة الزمنية بالثواني.")
         return
 
     try:
         msg_limit = int(context.args[0])
         time_frame = int(context.args[1])
     except ValueError:
-        update.message.reply_text("Please provide valid numbers for message limit and time frame.")
+        update.message.reply_text("يرجى إدخال أرقام صحيحة.")
         return
 
     if chat_id not in user_data:
         user_data[chat_id] = {}
     user_data[chat_id]["antispam"] = {"msg_limit": msg_limit, "time_frame": time_frame}
-    update.message.reply_text(f"🛡️ Anti-spam settings updated. "
-                              f"Users sending more than {msg_limit} messages in {time_frame} seconds will be warned.")
+    update.message.reply_text(f"🛡️ تم تحديث إعدادات مانع السبام. "
+                              f"سيتم تحذير من يرسل أكثر من {msg_limit} رسالة في {time_frame} ثانية.")
 
 def set_antiflood(update: Update, context: CallbackContext) -> None:
-    """Set anti-flood settings."""
+    """إعداد مانع التكرار."""
     if not is_admin(update, context):
-        update.message.reply_text("🚫 You don't have permission to use this command.")
+        update.message.reply_text("🚫 لا تملك صلاحية.")
         return
     chat_id = update.effective_chat.id
     if not context.args or len(context.args) != 2:
-        update.message.reply_text("Please provide the number of messages and time frame in seconds.")
+        update.message.reply_text("يرجى تحديد عدد الرسائل والمدة الزمنية بالثواني.")
         return
 
     try:
         msg_limit = int(context.args[0])
         time_frame = int(context.args[1])
     except ValueError:
-        update.message.reply_text("Please provide valid numbers for message limit and time frame.")
+        update.message.reply_text("يرجى إدخال أرقام صحيحة.")
         return
 
     if chat_id not in user_data:
         user_data[chat_id] = {}
     user_data[chat_id]["antiflood"] = {"msg_limit": msg_limit, "time_frame": time_frame}
-    update.message.reply_text(f"🌊 Anti-flood settings updated. "
-                              f"Users sending more than {msg_limit} messages in {time_frame} seconds will be muted.")
+    update.message.reply_text(f"🌊 تم تحديث إعدادات مانع التكرار (Flood). "
+                              f"سيتم كتم من يرسل أكثر من {msg_limit} رسالة في {time_frame} ثانية.")
 
 def handle_message(update: Update, context: CallbackContext) -> None:
-    """Handle incoming messages and check for spam and flood."""
+    """معالجة الرسائل والتحقق من السبام والتكرار."""
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
 
     if chat_id in user_data:
-        # Anti-spam check
         if "antispam" in user_data[chat_id]:
             antispam = user_data[chat_id]["antispam"]
             check_spam(update, context, antispam["msg_limit"], antispam["time_frame"])
         
-        # Anti-flood check
         if "antiflood" in user_data[chat_id]:
             antiflood = user_data[chat_id]["antiflood"]
             check_flood(update, context, antiflood["msg_limit"], antiflood["time_frame"])
     
-    # Handle filters
     handle_filters(update, context)
 
 def check_spam(update: Update, context: CallbackContext, msg_limit: int, time_frame: int) -> None:
-    """Check for spam messages."""
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
 
@@ -959,7 +938,6 @@ def check_spam(update: Update, context: CallbackContext, msg_limit: int, time_fr
 
     user_data[chat_id][user_id]["messages"].append(datetime.now())
 
-    # Remove messages older than the time frame
     user_data[chat_id][user_id]["messages"] = [
         msg_time for msg_time in user_data[chat_id][user_id]["messages"]
         if (datetime.now() - msg_time).total_seconds() <= time_frame
@@ -967,10 +945,9 @@ def check_spam(update: Update, context: CallbackContext, msg_limit: int, time_fr
 
     if len(user_data[chat_id][user_id]["messages"]) > msg_limit:
         warn(update, context)
-        user_data[chat_id][user_id]["messages"] = []  # Reset message count after warning
+        user_data[chat_id][user_id]["messages"] = []
 
 def check_flood(update: Update, context: CallbackContext, msg_limit: int, time_frame: int) -> None:
-    """Check for flood messages."""
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
 
@@ -979,7 +956,6 @@ def check_flood(update: Update, context: CallbackContext, msg_limit: int, time_f
 
     user_data[chat_id][user_id]["flood_messages"].append(datetime.now())
 
-    # Remove messages older than the time frame
     user_data[chat_id][user_id]["flood_messages"] = [
         msg_time for msg_time in user_data[chat_id][user_id]["flood_messages"]
         if (datetime.now() - msg_time).total_seconds() <= time_frame
@@ -987,10 +963,10 @@ def check_flood(update: Update, context: CallbackContext, msg_limit: int, time_f
 
     if len(user_data[chat_id][user_id]["flood_messages"]) > msg_limit:
         mute(update, context)
-        user_data[chat_id][user_id]["flood_messages"] = []  # Reset message count after muting
+        user_data[chat_id][user_id]["flood_messages"] = []
 
 def button(update: Update, context: CallbackContext) -> None:
-    """Handle button presses."""
+    """معالجة الضغط على الأزرار."""
     query = update.callback_query
     query.answer()
 
@@ -1005,22 +981,18 @@ def button(update: Update, context: CallbackContext) -> None:
     elif query.data == 'settings':
         settings(update, context)
     elif query.data in ['ban', 'unban', 'kick', 'mute', 'unmute', 'warn', 'unwarn', 'promote', 'demote', 'purge', 'filter', 'stop', 'filterlist', 'gban', 'lockall', 'unlockall', 'dwarn', 'dmute']:
-        query.edit_message_text(f"Use /{query.data} command to {query.data.replace('_', ' ')}.")
+        query.edit_message_text(f"استخدم الأمر {query.data} للقيام بـ {query.data.replace('_', ' ')}.")
     elif query.data in ['info', 'id', 'rules', 'help']:
-        query.edit_message_text(f"Use /{query.data} command to get {query.data.replace('_', ' ')}.")
+        query.edit_message_text(f"استخدم الأمر {query.data} للحصول على {query.data.replace('_', ' ')}.")
     elif query.data in ['roll_dice', 'flip_coin', 'random_number', 'quote']:
-        query.edit_message_text(f"Use /{query.data} command to {query.data.replace('_', ' ')}.")
+        query.edit_message_text(f"استخدم الأمر {query.data} للقيام بـ {query.data.replace('_', ' ')}.")
     elif query.data in ['set_welcome', 'set_goodbye', 'set_rules', 'set_antispam', 'set_antiflood']:
-        query.edit_message_text(f"Use /{query.data} command to set {query.data.replace('set_', '')}.")
+        query.edit_message_text(f"استخدم الأمر {query.data} لتعيين {query.data.replace('set_', '')}.")
 
 def main() -> None:
-    """Start the bot."""
- 
+    """بدء البوت."""
     updater = Updater(TOKEN)
-
-    
     dispatcher = updater.dispatcher
-
 
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
@@ -1056,17 +1028,13 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("set_antiflood", set_antiflood))
     dispatcher.add_handler(CommandHandler("announcement", announcement))
 
-
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
-
     dispatcher.add_handler(CallbackQueryHandler(button))
 
-    # Start the Bot
+    # تشغيل البوت
     updater.start_polling()
-
-
     updater.idle()
 
 if __name__ == '__main__':
-    print(f"🌼 DaisyBot is starting up! Managed by {OWNER_USERNAME}")
+    print(f"🌼 بوت ديزي قيد التشغيل الآن! بواسطة {OWNER_USERNAME}")
     main()
